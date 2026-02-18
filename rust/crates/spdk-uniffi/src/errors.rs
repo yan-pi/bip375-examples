@@ -43,6 +43,7 @@ impl From<spdk_core::psbt::Error> for Bip375Error {
             spdk_core::psbt::Error::InvalidFieldData(_) => Bip375Error::InvalidData,
             spdk_core::psbt::Error::InvalidFieldType(_) => Bip375Error::InvalidData,
             spdk_core::psbt::Error::MissingField(_) => Bip375Error::InvalidData,
+            spdk_core::psbt::Error::InvalidPsbtState(_) => Bip375Error::ValidationError,
 
             // Serialization errors
             spdk_core::psbt::Error::Serialization(_) => Bip375Error::SerializationError,
