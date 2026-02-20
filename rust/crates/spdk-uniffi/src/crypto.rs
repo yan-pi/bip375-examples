@@ -20,75 +20,83 @@ pub fn bip352_compute_ecdh_share(
     Ok(share.serialize().to_vec())
 }
 
-// pub fn bip352_derive_silent_payment_output_pubkey(
-//     spend_key: Vec<u8>,
-//     ecdh_secret: Vec<u8>,
-//     k: u32,
-// ) -> Result<Vec<u8>, Bip375Error> {
-//     let spend_pk = PublicKey::from_slice(&spend_key).map_err(|_| Bip375Error::InvalidKey)?;
-//     let ecdh_pk = PublicKey::from_slice(&ecdh_secret).map_err(|_| Bip375Error::InvalidKey)?;
+pub fn bip352_derive_silent_payment_output_pubkey(
+    spend_key: Vec<u8>,
+    ecdh_secret: Vec<u8>,
+    k: u32,
+) -> Result<Vec<u8>, Bip375Error> {
+    let secp = secp256k1::Secp256k1::new();
+    let spend_pk = PublicKey::from_slice(&spend_key).map_err(|_| Bip375Error::InvalidKey)?;
 
-//     let output_pk = crypto::bip352::derive_silent_payment_output_pubkey(&spend_pk, &ecdh_pk, k)?;
-//     Ok(output_pk.serialize().to_vec())
-// }
+    if ecdh_secret.len() != 33 {
+        return Err(Bip375Error::InvalidData);
+    }
+    let mut ecdh_bytes = [0u8; 33];
+    ecdh_bytes.copy_from_slice(&ecdh_secret);
 
-// pub fn bip352_pubkey_to_p2wpkh_script(pubkey: Vec<u8>) -> Result<Vec<u8>, Bip375Error> {
-//     let pk = PublicKey::from_slice(&pubkey).map_err(|_| Bip375Error::InvalidKey)?;
-//     let script = crypto::bip352::pubkey_to_p2wpkh_script(&pk)?;
-//     Ok(script.to_bytes())
-// }
+    let output_pk =
+        crypto::bip352::derive_silent_payment_output_pubkey(&secp, &spend_pk, &ecdh_bytes, k)?;
+    Ok(output_pk.serialize().to_vec())
+}
 
-// pub fn bip352_tweaked_key_to_p2tr_script(pubkey: Vec<u8>) -> Result<Vec<u8>, Bip375Error> {
-//     let pk = PublicKey::from_slice(&pubkey).map_err(|_| Bip375Error::InvalidKey)?;
-//     let script = crypto::bip352::tweaked_key_to_p2tr_script(&pk)?;
-//     Ok(script.to_bytes())
-// }
+pub fn bip352_pubkey_to_p2wpkh_script(pubkey: Vec<u8>) -> Result<Vec<u8>, Bip375Error> {
+    let pk = PublicKey::from_slice(&pubkey).map_err(|_| Bip375Error::InvalidKey)?;
+    let script = crypto::bip352::pubkey_to_p2wpkh_script(&pk);
+    Ok(script.to_bytes())
+}
 
-// pub fn bip352_compute_label_tweak(scan_key: Vec<u8>, label: u32) -> Result<Vec<u8>, Bip375Error> {
-//     let scan_pk = PublicKey::from_slice(&scan_key).map_err(|_| Bip375Error::InvalidKey)?;
-//     let tweak = crypto::bip352::compute_label_tweak(&scan_pk, label)?;
-//     Ok(tweak.to_vec())
-// }
+pub fn bip352_tweaked_key_to_p2tr_script(pubkey: Vec<u8>) -> Result<Vec<u8>, Bip375Error> {
+    let pk = PublicKey::from_slice(&pubkey).map_err(|_| Bip375Error::InvalidKey)?;
+    let script = crypto::bip352::tweaked_key_to_p2tr_script(&pk);
+    Ok(script.to_bytes())
+}
 
-// pub fn bip352_apply_label_to_spend_key(
-//     spend_key: Vec<u8>,
-//     scan_key: Vec<u8>,
-//     label: u32,
-// ) -> Result<Vec<u8>, Bip375Error> {
-//     let spend_pk = PublicKey::from_slice(&spend_key).map_err(|_| Bip375Error::InvalidKey)?;
-//     let scan_pk = PublicKey::from_slice(&scan_key).map_err(|_| Bip375Error::InvalidKey)?;
+pub fn bip352_compute_label_tweak(
+    scan_privkey: Vec<u8>,
+    label: u32,
+) -> Result<Vec<u8>, Bip375Error> {
+    let sk = SecretKey::from_slice(&scan_privkey).map_err(|_| Bip375Error::InvalidKey)?;
+    let tweak = crypto::bip352::compute_label_tweak(&sk, label)?;
+    Ok(tweak.to_be_bytes().to_vec())
+}
 
-//     let labeled_pk = crypto::bip352::apply_label_to_spend_key(&spend_pk, &scan_pk, label)?;
-//     Ok(labeled_pk.serialize().to_vec())
-// }
+pub fn bip352_apply_label_to_spend_key(
+    spend_key: Vec<u8>,
+    scan_privkey: Vec<u8>,
+    label: u32,
+) -> Result<Vec<u8>, Bip375Error> {
+    let secp = secp256k1::Secp256k1::new();
+    let spend_pk = PublicKey::from_slice(&spend_key).map_err(|_| Bip375Error::InvalidKey)?;
+    let scan_sk = SecretKey::from_slice(&scan_privkey).map_err(|_| Bip375Error::InvalidKey)?;
 
-// pub fn bip352_compute_input_hash(input_pubkeys: Vec<Vec<u8>>) -> Result<Vec<u8>, Bip375Error> {
-//     let pubkeys: Result<Vec<PublicKey>, _> = input_pubkeys
-//         .iter()
-//         .map(|pk_bytes| PublicKey::from_slice(pk_bytes))
-//         .collect();
+    let labeled_pk =
+        crypto::bip352::apply_label_to_spend_key(&secp, &spend_pk, &scan_sk, label)?;
+    Ok(labeled_pk.serialize().to_vec())
+}
 
-//     let pubkeys = pubkeys.map_err(|_| Bip375Error::InvalidKey)?;
-//     let input_hash = crypto::bip352::compute_input_hash(&pubkeys)?;
-//     Ok(input_hash.to_vec())
-// }
+pub fn bip352_compute_input_hash(
+    smallest_outpoint: Vec<u8>,
+    summed_pubkey: Vec<u8>,
+) -> Result<Vec<u8>, Bip375Error> {
+    let pk = PublicKey::from_slice(&summed_pubkey).map_err(|_| Bip375Error::InvalidKey)?;
+    let input_hash = crypto::bip352::compute_input_hash(&smallest_outpoint, &pk)?;
+    Ok(input_hash.to_be_bytes().to_vec())
+}
 
-// pub fn bip352_compute_shared_secret_tweak(
-//     ecdh_secret: Vec<u8>,
-//     input_hash: Vec<u8>,
-// ) -> Result<Vec<u8>, Bip375Error> {
-//     let ecdh_pk = PublicKey::from_slice(&ecdh_secret).map_err(|_| Bip375Error::InvalidKey)?;
+pub fn bip352_compute_shared_secret_tweak(
+    ecdh_secret: Vec<u8>,
+    k: u32,
+) -> Result<Vec<u8>, Bip375Error> {
+    if ecdh_secret.len() != 33 {
+        return Err(Bip375Error::InvalidData);
+    }
 
-//     if input_hash.len() != 32 {
-//         return Err(Bip375Error::InvalidData);
-//     }
+    let mut ecdh_bytes = [0u8; 33];
+    ecdh_bytes.copy_from_slice(&ecdh_secret);
 
-//     let mut hash_bytes = [0u8; 32];
-//     hash_bytes.copy_from_slice(&input_hash);
-
-//     let tweak = crypto::bip352::compute_shared_secret_tweak(&ecdh_pk, &hash_bytes)?;
-//     Ok(tweak.to_vec())
-// }
+    let tweak = crypto::bip352::compute_shared_secret_tweak(&ecdh_bytes, k)?;
+    Ok(tweak.to_be_bytes().to_vec())
+}
 
 // ============================================================================
 // BIP-374 DLEQ Proof Functions

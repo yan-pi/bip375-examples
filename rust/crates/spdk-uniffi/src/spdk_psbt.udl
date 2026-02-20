@@ -5,6 +5,27 @@ namespace spdk_psbt {
   [Throws=Bip375Error]
   bytes bip352_compute_ecdh_share(bytes privkey, bytes pubkey);
 
+  [Throws=Bip375Error]
+  bytes bip352_derive_silent_payment_output_pubkey(bytes spend_key, bytes ecdh_secret, u32 k);
+
+  [Throws=Bip375Error]
+  bytes bip352_pubkey_to_p2wpkh_script(bytes pubkey);
+
+  [Throws=Bip375Error]
+  bytes bip352_tweaked_key_to_p2tr_script(bytes pubkey);
+
+  [Throws=Bip375Error]
+  bytes bip352_compute_label_tweak(bytes scan_privkey, u32 label);
+
+  [Throws=Bip375Error]
+  bytes bip352_apply_label_to_spend_key(bytes spend_key, bytes scan_privkey, u32 label);
+
+  [Throws=Bip375Error]
+  bytes bip352_compute_input_hash(bytes smallest_outpoint, bytes summed_pubkey);
+
+  [Throws=Bip375Error]
+  bytes bip352_compute_shared_secret_tweak(bytes ecdh_secret, u32 k);
+
   // ============================================================================
   // BIP-374 DLEQ Proof Functions
   // ============================================================================
@@ -113,4 +134,19 @@ interface SilentPaymentPsbt {
 
   [Throws=Bip375Error]
   bytes extract_transaction();
+
+  void set_tx_modifiable(u8 flags);
+
+  // Raw field manipulation (for test vector generation)
+  [Throws=Bip375Error]
+  void add_raw_global_field(u8 type_value, bytes key_data, bytes value);
+
+  [Throws=Bip375Error]
+  void remove_raw_input_fields_by_type(u32 input_index, u8 type_value);
+
+  [Throws=Bip375Error]
+  void add_raw_input_field(u32 input_index, u8 type_value, bytes key_data, bytes value);
+
+  [Throws=Bip375Error]
+  void add_raw_output_field(u32 output_index, u8 type_value, bytes key_data, bytes value);
 };

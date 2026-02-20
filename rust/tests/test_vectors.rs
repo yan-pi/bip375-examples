@@ -17,14 +17,14 @@ use spdk_core::psbt::SilentPaymentPsbt;
 use std::fs;
 
 /// Test vector file location
-const TEST_VECTORS_FILE: &str = "../test_vectors.json";
+const TEST_VECTORS_FILE: &str = "../bip375_test_vectors.json";
 
 /// Root structure for all test vectors
 #[derive(Debug, Deserialize, Serialize)]
 struct TestVectors {
     description: String,
     version: String,
-    format_notes: Vec<String>,
+    notes: Vec<String>,
     invalid: Vec<TestVector>,
     valid: Vec<TestVector>,
 }

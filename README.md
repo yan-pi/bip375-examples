@@ -60,7 +60,6 @@ Alice, Bob and Charlie create, sign, finalize a silent payments spending transac
 ### Testing Python Examples
   **`python/tests/validate_tests_examples.py`** - Validate python examples
 
-## **BIP-0375 Reference**
+## **BIP-0375 Test Vectors**
 
-[bips/bip-0375](https://github.com/bitcoin/bips/)
-- [test vectors](bips/bip-0375/test_vectors.json) - cloned in this repo for convienence
+- [test vectors](bips/bip-0375/bip375_test_vectors.json) - cloned in this repo for convienence

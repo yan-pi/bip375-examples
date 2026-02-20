@@ -352,36 +352,6 @@ def test_vectors():
 
     return result
 
-def test_vector_validator():
-    """Run the BIP 375 test vector validator"""
-    result = TestResult("BIP 375 Test Vector Validator")
-    start_time = time.time()
-
-    try:
-        print_test_start("BIP 375 Test Vector Validator (test_vector_validator.py)")
-
-        # Get bip-0375 root directory (parent of tests/)
-        bip_dir = Path(__file__).parent.parent
-        tests_dir = bip_dir / "tests"
-
-        print("\n  Running test vector validator with psbt_sp package")
-        if not run_command(
-            ["python3", "test_vector_validator.py"],
-            cwd=tests_dir,  # Run from tests/ directory
-            description="Validate test vectors using psbt_sp implementation"
-        ):
-            result.error = "Test vector validator failed"
-            return result
-
-        result.passed = True
-
-    except Exception as e:
-        result.error = str(e)
-
-    finally:
-        result.duration = time.time() - start_time
-
-    return result
 
 def main():
     """Run all tests and report results"""
